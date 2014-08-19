@@ -1,10 +1,10 @@
 *.dll
 *.pdb
 *.exe
-Ef.Factory/*.user
-Ef.Factory/*.suo
-Ef.Factory/bin/**/*.*
-Ef.Factory/obj/**/*.*
-Ef.Factory.Test/bin/**/*.*
-Ef.Factory.Test/obj/**/*.*
-Ef.Factory/packages/**/*.*
+**/*.user
+**/*.suo
+**/bin/**/*.*
+**/obj/**/*.*
+**/bin/**/*.*
+**/obj/**/*.*
+**/packages/**/*.*
