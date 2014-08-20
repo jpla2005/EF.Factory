@@ -9,7 +9,6 @@ namespace Ef.Factory
         Task SaveAsync(T entity);
         Task UpdateAsync(T entity);
         Task DeleteAsync(T entity);
-        Task<int> CommitAsync();
 
         Task<T> GetByIdAsync(TKey id);
 

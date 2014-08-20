@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Ef.Factory
@@ -18,7 +19,7 @@ namespace Ef.Factory
 
         protected T Context { get; set; }
 
-        protected IDictionary<Type, IConmited> CreatedFactories { get; set; }
+        protected IDictionary<Type, ICommitable> CreatedFactories { get; set; }
 
         public bool AutoCommit { get; set; }
 
@@ -29,7 +30,7 @@ namespace Ef.Factory
         public UnitWork()
         {
             Context = new T();
-            CreatedFactories = new Dictionary<Type, IConmited>();
+            CreatedFactories = new Dictionary<Type, ICommitable>();
         }
 
         ~UnitWork()
@@ -102,11 +103,11 @@ namespace Ef.Factory
             Context = cont;
         }
         
-        public int Commit(bool autoRollbackOnError = true)
+        public virtual int Commit(bool autoRollbackOnError = true)
         {
             try
             {
-                return Context.SaveChanges();
+                return CreatedFactories.Values.Sum(factory => factory.Commit());
             }
             catch (Exception)
             {
@@ -119,11 +120,17 @@ namespace Ef.Factory
             }
         }
 
-        public async Task<int> CommitAsync(bool autoRollbackOnError = true)
+        public async virtual Task<int> CommitAsync(bool autoRollbackOnError = true)
         {
             try
             {
-                return await Context.SaveChangesAsync();
+                var result = 0;
+                foreach (var factory in CreatedFactories.Values)
+                {
+                    result += await factory.CommitAsync();
+                }
+
+                return result;
             }
             catch (Exception)
             {

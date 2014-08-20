@@ -5,22 +5,16 @@ using System.Linq.Expressions;
 
 namespace Ef.Factory
 {
-    public interface IConmited : IDisposable
-    {
-        bool IsDisposed { get; }
-    }
-
     public interface IGenericFactory<T> : IGenericFactory<T, int> where T : class
     {
     }
 
-    public interface IGenericFactory<T, in TKey> : IConmited where T : class
+    public interface IGenericFactory<T, in TKey> : ICommitable where T : class
     {
         void Save(T entity);
         void Update(T entity);
         void Delete(T entity);
         void Delete(params Expression<Func<T, bool>>[] filters);
-        int Commit();
      
         T GetById(TKey id);
 

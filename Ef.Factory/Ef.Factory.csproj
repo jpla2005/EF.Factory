@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="CollectionUtils.cs" />
     <Compile Include="GenericFactory.cs" />
+    <Compile Include="ICommitable.cs" />
     <Compile Include="IGenericFactory.cs" />
     <Compile Include="IGenericFactoryAsync.cs" />
     <Compile Include="IUnitOfWork.cs" />

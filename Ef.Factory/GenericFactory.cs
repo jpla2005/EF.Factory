@@ -175,7 +175,7 @@ namespace Ef.Factory
             return Context;
         }
 
-        public int Commit()
+        public virtual int Commit()
         {
             return GetContext().SaveChanges();
         }
@@ -184,7 +184,7 @@ namespace Ef.Factory
 
         #region Async
 
-        public async Task<int> CommitAsync()
+        public async virtual Task<int> CommitAsync()
         {
             return await GetContext().SaveChangesAsync();
         }
