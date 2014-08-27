@@ -52,28 +52,28 @@ namespace Ef.Factory
             {
                 if (!disposable.IsDisposed)
                 {
-                    return (GenericFactory<TEntity, TKey>) disposable;
+                    return (GenericFactory<TEntity, TKey>)disposable;
                 }
 
                 CreatedFactories.Remove(typeof(TEntity));
             }
 
-            var constructorInfo =
-                GetRepositoryType().MakeGenericType(typeof (TEntity), typeof (TKey)).GetConstructor(new[]
-                {
-                    typeof (T), typeof(bool)
-                });
-
-            if (constructorInfo != null)
+            var factoryType = GetRepositoryType().MakeGenericType(typeof(TEntity), typeof(TKey));
+            try
             {
-                var repository = (GenericFactory<TEntity, TKey>) constructorInfo.Invoke(new object[]
+                var factoryObj = Activator.CreateInstance(factoryType, new object[] { Context, AutoCommit });
+                var factory = (GenericFactory<TEntity, TKey>)factoryObj;
+                if (factory != null)
                 {
-                    Context, AutoCommit
-                });
+                    CreatedFactories.Add(typeof(TEntity), (ICommitable)factoryObj);
 
-                CreatedFactories.Add(typeof(TEntity), repository);
-
-                return repository;
+                    return factory;
+                }
+            }
+            // ReSharper disable once EmptyGeneralCatchClause
+            catch
+            {
+                // just return null
             }
 
             return null;
@@ -102,7 +102,7 @@ namespace Ef.Factory
         {
             Context = cont;
         }
-        
+
         public virtual int Commit(bool autoRollbackOnError = true)
         {
             try
@@ -145,7 +145,7 @@ namespace Ef.Factory
 
         public void RollBack()
         {
-            var ctx = ((IObjectContextAdapter) Context).ObjectContext;
+            var ctx = ((IObjectContextAdapter)Context).ObjectContext;
             ctx.AcceptAllChanges();
         }
 

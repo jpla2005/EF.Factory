@@ -76,9 +76,6 @@ namespace Ef.Factory
         protected virtual async void UpdateCore(T entity, bool async)
         {
             var db = GetContext();
-            var dbset = db.Set<T>();
-
-            dbset.Attach(entity);
             db.Entry(entity).State = EntityState.Modified;
 
             if (AlwaysCommit)
@@ -166,11 +163,6 @@ namespace Ef.Factory
         #region Sync
 
         protected virtual DbContext GetContext()
-        {
-            return GetContext("DefaultConnection");
-        }
-
-        protected virtual DbContext GetContext(string connection)
         {
             return Context;
         }
