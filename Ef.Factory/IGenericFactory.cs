@@ -21,6 +21,9 @@ namespace Ef.Factory
         T First(params Expression<Func<T, bool>>[] filters);
         TR First<TR>(params Expression<Func<TR, bool>>[] filters) where TR : class, T;
 
+        T First(IEnumerable<Expression<Func<T, object>>> includeProperties,params Expression<Func<T, bool>>[] filters);
+        TR First<TR>(IEnumerable<Expression<Func<TR, object>>> includeProperties, params Expression<Func<TR, bool>>[] filters) where TR : class, T;
+
         IQueryable<T> GetAll(params Expression<Func<T, object>>[] includeProperties);
         IQueryable<TR> GetAll<TR>(params Expression<Func<TR, object>>[] includeProperties) where TR : class, T;
 

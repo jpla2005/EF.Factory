@@ -267,6 +267,17 @@ namespace Ef.Factory
             return QueryCore(null, filters).FirstOrDefault();
         }
 
+        public T First(IEnumerable<Expression<Func<T, object>>> includeProperties, params Expression<Func<T, bool>>[] filters)
+        {
+            return QueryCore(includeProperties, filters).FirstOrDefault();
+        }
+
+        public TR First<TR>(IEnumerable<Expression<Func<TR, object>>> includeProperties, params Expression<Func<TR, bool>>[] filters) where TR : class, T
+        {
+            return QueryCore(includeProperties, filters).FirstOrDefault();
+        }
+
+
         public T First(params Expression<Func<T, bool>>[] filters)
         {
             return First<T>(filters);
@@ -333,6 +344,16 @@ namespace Ef.Factory
         public async Task<T> FirstAsync(params Expression<Func<T, bool>>[] filters)
         {
             return await FirstAsync<T>(filters);
+        }
+
+        public async Task<T> FirstAsync(IEnumerable<Expression<Func<T, object>>> includeProperties, params Expression<Func<T, bool>>[] filters)
+        {
+            return await FirstAsync<T>(includeProperties, filters);
+        }
+
+        public async Task<TR> FirstAsync<TR>(IEnumerable<Expression<Func<TR, object>>> includeProperties, params Expression<Func<TR, bool>>[] filters) where TR : class, T
+        {
+            return await QueryCore(includeProperties, filters).FirstOrDefaultAsync();
         }
 
         public async Task<int> CountAsync(params Expression<Func<T, bool>>[] filters)
