@@ -101,6 +101,9 @@ namespace Ef.Factory
         public void SetContext(T cont)
         {
             Context = cont;
+
+            // clear cached factories to change the context
+            CreatedFactories.Clear();
         }
 
         public virtual int Commit(bool autoRollbackOnError = true)
