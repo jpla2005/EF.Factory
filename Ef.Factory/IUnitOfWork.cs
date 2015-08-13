@@ -5,6 +5,8 @@ namespace Ef.Factory
 {
     public interface IUnitOfWork<T> : IDisposable
     {
+        T Context { get; set; }
+
         IGenericFactoryAsync<TEntity, TKey> CreateFactory<TEntity, TKey>() where TEntity : class;
 
         int Commit(bool autoRollbackOnError = true);
