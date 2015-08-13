@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ILogicalDelete.cs" />
     <Compile Include="CollectionUtils.cs" />
     <Compile Include="GenericFactory.cs" />
     <Compile Include="ICommitable.cs" />

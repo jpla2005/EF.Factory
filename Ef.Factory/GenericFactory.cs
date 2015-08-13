@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Ef.Factory
 {
-    public class GenericFactory<T, TKey> :  IGenericFactoryAsync<T, TKey> where T : class
+    public class GenericFactory<T, TKey> : IGenericFactoryAsync<T, TKey> where T : class
     {
         #region Properties
 
@@ -65,50 +65,51 @@ namespace Ef.Factory
 
         #region Core
 
+        #region Sync
+
         protected virtual void SaveCore(T entity)
         {
             var db = GetContext();
             var dbset = db.Set<T>();
 
             dbset.Add(entity);
+            if (AlwaysCommit)
+            {
+                Commit();
+            }
         }
 
-        protected virtual async void UpdateCore(T entity, bool async)
+        protected virtual void UpdateCore(T entity)
         {
             var db = GetContext();
             db.Entry(entity).State = EntityState.Modified;
 
             if (AlwaysCommit)
             {
-                if (async)
-                {
-                    await CommitAsync();
-                }
-                else
-                {
-                    Commit();
-                }
+                Commit();
             }
         }
 
-        protected virtual async void DeleteCore(T entity, bool async)
+        protected virtual void DeleteCore(T entity)
         {
             var db = GetContext();
             try
             {
                 var dbset = db.Set<T>();
-                dbset.Remove(entity);
+                var logicalDelete = entity as ILogicalDelete;
+
+                if (logicalDelete != null)
+                {
+                    logicalDelete.IsDeleted = true;
+                }
+                else
+                {
+                    dbset.Remove(entity);
+                }
 
                 if (AlwaysCommit)
                 {
-                    if (async)
-                    {
-                        await CommitAsync();
-                    }
-                    else
-                    {
-                        Commit();
-                    }
+                    Commit();
                 }
             }
             catch (Exception)
@@ -145,6 +146,8 @@ namespace Ef.Factory
 
             return source;
         }
+
+        #endregion
 
         #endregion
 
@@ -192,20 +195,16 @@ namespace Ef.Factory
         public void Save(T entity)
         {
             SaveCore(entity);
-            if (AlwaysCommit)
-            {
-                Commit();
-            }
         }
 
         public void Update(T entity)
         {
-            UpdateCore(entity, false);
+            UpdateCore(entity);
         }
 
         public void Delete(T entity)
         {
-            DeleteCore(entity, false);
+            DeleteCore(entity);
         }
 
         public void Delete(params Expression<Func<T, bool>>[] filters)
@@ -217,9 +216,25 @@ namespace Ef.Factory
                 ? filters.Aggregate(dbset.OfType<T>(), (current, expression) => current.Where(expression))
                 : dbset.AsQueryable();
 
-            foreach (var obj in objects)
+            if (typeof(ILogicalDelete).IsAssignableFrom(typeof(T)))
             {
-                DeleteCore(obj, true);
+                foreach (var obj in objects)
+                {
+                    var logicalDelete = obj as ILogicalDelete;
+                    if (logicalDelete != null)
+                    {
+                        logicalDelete.IsDeleted = true;
+                    }
+                }
+            }
+            else
+            {
+                dbset.RemoveRange(objects);
+            }
+
+            if (AlwaysCommit)
+            {
+                Commit();
             }
         }
 
@@ -229,21 +244,17 @@ namespace Ef.Factory
 
         public async Task SaveAsync(T entity)
         {
-            SaveCore(entity);
-            if (AlwaysCommit)
-            {
-                await CommitAsync();
-            }
+            await Task.Run(() => SaveCore(entity));
         }
 
         public async Task UpdateAsync(T entity)
         {
-            await Task.Run(() => UpdateCore(entity, true));
+            await Task.Run(() => UpdateCore(entity));
         }
 
         public async Task DeleteAsync(T entity)
         {
-            await Task.Run(() => DeleteCore(entity, true));
+            await Task.Run(() => DeleteCore(entity));
         }
 
         #endregion
@@ -260,7 +271,7 @@ namespace Ef.Factory
             return db.Set<T>().Find(id);
         }
 
-   
+
 
         public TR First<TR>(params Expression<Func<TR, bool>>[] filters) where TR : class, T
         {
