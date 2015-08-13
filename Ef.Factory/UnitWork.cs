@@ -17,7 +17,7 @@ namespace Ef.Factory
 
         #region Properties
 
-        protected T Context { get; set; }
+        public T Context { get; set; }
 
         protected IDictionary<Type, ICommitable> CreatedFactories { get; set; }
 
