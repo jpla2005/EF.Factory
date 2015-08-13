@@ -4,7 +4,7 @@ namespace Ef.Factory
 {
     public class FactoryNonQueryEventArgs<T> : EventArgs where T : class
     {
-        private T _entity;
+        public T Entity { get; set; }
 
         public FactoryNonQueryEventArgs()
             : this(null)
@@ -13,7 +13,7 @@ namespace Ef.Factory
 
         public FactoryNonQueryEventArgs(T entity)
         {
-            _entity = entity;
+            Entity = entity;
         }
     }
 }

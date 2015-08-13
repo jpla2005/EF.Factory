@@ -5,11 +5,11 @@ namespace Ef.Factory
 {
     public class FactoryQueryEventArgs<T> : EventArgs where T : class
     {
-        private IQueryable<T> _items;
+        public IQueryable<T> Items { get; set; }
 
         public FactoryQueryEventArgs(IQueryable<T> items)
         {
-            _items = items;
+            Items = items;
         }
     }
 }
