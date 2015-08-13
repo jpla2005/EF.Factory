@@ -19,6 +19,16 @@ namespace Ef.Factory
 
         #endregion
 
+        #region Events
+
+        public event EventHandler<FactoryNonQueryEventArgs<T>> Saving; 
+        public event EventHandler<FactoryNonQueryEventArgs<T>> Updating; 
+        public event EventHandler<FactoryNonQueryEventArgs<T>> Deleting; 
+        public event EventHandler<FactoryNonQueryEventArgs<T>> Committing; 
+        public event EventHandler<FactoryQueryEventArgs<T>> Querying; 
+
+        #endregion
+
         #region Constructors
 
         public GenericFactory(DbContext context, bool commit = false)
@@ -67,10 +77,15 @@ namespace Ef.Factory
 
         #region Sync
 
-        protected virtual void SaveCore(T entity)
+        private void SaveCore(T entity)
         {
             var db = GetContext();
             var dbset = db.Set<T>();
+
+            if (Saving != null)
+            {
+                Saving(this, new FactoryNonQueryEventArgs<T>(entity));
+            }
 
             dbset.Add(entity);
             if (AlwaysCommit)
@@ -79,10 +94,15 @@ namespace Ef.Factory
             }
         }
 
-        protected virtual void UpdateCore(T entity)
+        private void UpdateCore(T entity)
         {
             var db = GetContext();
             db.Entry(entity).State = EntityState.Modified;
+
+            if (Updating != null)
+            {
+                Updating(this, new FactoryNonQueryEventArgs<T>(entity));
+            }
 
             if (AlwaysCommit)
             {
@@ -90,12 +110,18 @@ namespace Ef.Factory
             }
         }
 
-        protected virtual void DeleteCore(T entity)
+        private void DeleteCore(T entity)
         {
             var db = GetContext();
             try
             {
                 var dbset = db.Set<T>();
+
+                if (Deleting != null)
+                {
+                    Deleting(this, new FactoryNonQueryEventArgs<T>(entity));
+                }
+
                 var logicalDelete = entity as ILogicalDelete;
 
                 if (logicalDelete != null)
@@ -123,7 +149,7 @@ namespace Ef.Factory
             }
         }
 
-        protected virtual IQueryable<TR> QueryCore<TR>(IEnumerable<Expression<Func<TR, object>>> includeProperties,
+        private IQueryable<TR> QueryCore<TR>(IEnumerable<Expression<Func<TR, object>>> includeProperties,
             params Expression<Func<TR, bool>>[] filters) where TR : class, T
         {
             var db = GetContext();
@@ -142,6 +168,11 @@ namespace Ef.Factory
             if (!CollectionUtils.IsNullOrEmpty(filters))
             {
                 source = filters.Aggregate(source, (current, expression) => current.Where(expression));
+            }
+
+            if (Querying != null)
+            {
+                Querying(this, new FactoryQueryEventArgs<T>(source));
             }
 
             return source;
@@ -172,6 +203,11 @@ namespace Ef.Factory
 
         public virtual int Commit()
         {
+            if (Committing != null)
+            {
+                Committing(this, new FactoryNonQueryEventArgs<T>());
+            }
+
             return GetContext().SaveChanges();
         }
 
@@ -181,6 +217,11 @@ namespace Ef.Factory
 
         public async virtual Task<int> CommitAsync()
         {
+            if (Committing != null)
+            {
+                Committing(this, new FactoryNonQueryEventArgs<T>());
+            }
+
             return await GetContext().SaveChangesAsync();
         }
 
@@ -272,7 +313,6 @@ namespace Ef.Factory
         }
 
 
-
         public TR First<TR>(params Expression<Func<TR, bool>>[] filters) where TR : class, T
         {
             return QueryCore(null, filters).FirstOrDefault();
@@ -288,11 +328,11 @@ namespace Ef.Factory
             return QueryCore(includeProperties, filters).FirstOrDefault();
         }
 
-
         public T First(params Expression<Func<T, bool>>[] filters)
         {
             return First<T>(filters);
         }
+
 
         public IQueryable<TR> GetAll<TR>(params Expression<Func<TR, object>>[] includeProperties) where TR : class, T
         {
@@ -303,6 +343,7 @@ namespace Ef.Factory
         {
             return GetAll<T>(includeProperties);
         }
+
 
         public IQueryable<TR> Find<TR>(IEnumerable<Expression<Func<TR, object>>> includeProperties,
             params Expression<Func<TR, bool>>[] filters) where TR : class, T
@@ -326,15 +367,10 @@ namespace Ef.Factory
             return Find<T>(filters);
         }
 
+
         public int Count(params Expression<Func<T, bool>>[] filters)
         {
             return Find(filters).Count();
-        }
-
-        public virtual IQueryable<T> AllIncluding(params Expression<Func<T, object>>[] includeProperties)
-        {
-            IQueryable<T> source = GetContext().Set<T>();
-            return includeProperties.Aggregate(source, (current, path) => current.Include(path));
         }
 
         #endregion

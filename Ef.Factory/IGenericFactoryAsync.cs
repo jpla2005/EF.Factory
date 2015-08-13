@@ -15,7 +15,6 @@ namespace Ef.Factory
 
         Task<T> FirstAsync(params Expression<Func<T, bool>>[] filters);
         Task<TR> FirstAsync<TR>(params Expression<Func<TR, bool>>[] filters) where TR : class, T;
-
         Task<T> FirstAsync(IEnumerable<Expression<Func<T, object>>> includeProperties, params Expression<Func<T, bool>>[] filters);
         Task<TR> FirstAsync<TR>(IEnumerable<Expression<Func<TR, object>>> includeProperties, params Expression<Func<TR, bool>>[] filters) where TR : class, T;
 
